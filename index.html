@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+</head>
+<body>
+    <h1>Todo List</h1>
+    <hr>
+    <!-- Fetch All Data Button -->
+    <button id="fetch-data" onclick="getAllData()">Get All Todos</button><br><br>
+
+    <!-- Submit Todo Form -->
+    <input type="text" id="title" placeholder="Enter Title">
+    <input type="text" id="description" placeholder="Enter Description">
+    <button id="submit-todo" onclick="submitTodo()">Submit</button><br><br>
+
+    <!-- Get Todo by ID -->
+    <input type="text" id="todoId" placeholder="Enter Todo ID">
+    <button onclick="getTodoById()">Get Todo by ID</button><br><br>
+
+    <!-- Delete Todo by ID -->
+    <input type="text" id="deleteTodoId" placeholder="Enter Todo ID to Delete">
+    <button onclick="deleteTodoById()">Delete Todo</button><br><br>
+
+    <!-- Update Todo by ID (Patch) -->
+    <input type="text" id="patchTodoId" placeholder="Enter Todo ID to Update">
+    <input type="text" id="patchTitle" placeholder="New Title">
+    <input type="text" id="patchDescription" placeholder="New Description">
+    <button onclick="patchTodoById()">Update Todo</button><br><br>
+
+    <!-- Todo List Display -->
+    <ul id="todo-lists"></ul>
+
+    <script>
+        // Function to fetch and display all todos
+        function getAllData() {
+            const ul = document.getElementById('todo-lists');
+            ul.innerHTML = '';
+
+            const url = 'https://api.freeapi.app/api/v1/todos?complete=false';
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.send();
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    const todos = response.data;
+
+                    todos.forEach(todo => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<strong>ID:</strong> ${todo._id} <br> <strong>Title:</strong> ${todo.title} <br> <strong>Description:</strong> ${todo.description} <br><br> `;
+                        ul.appendChild(li);
+                    });
+                }
+            };
+        }
+
+        // Function to submit a new todo
+        function submitTodo() {
+            const inputTitle = document.getElementById('title');
+            const inputDescription = document.getElementById('description');
+
+            const url = 'https://api.freeapi.app/api/v1/todos/';
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+
+            const data = {
+                title: inputTitle.value,
+                description: inputDescription.value
+            };
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.send(JSON.stringify(data));
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 201) {
+                    alert('Todo added successfully!');
+                    getAllData(); // Refresh the todo list
+                    // Clear form inputs after submission
+                    inputTitle.value = '';
+                    inputDescription.value = '';
+                }
+            };
+        }
+
+        // Function to get a specific todo by ID
+        function getTodoById() {
+            const inputTodoId = document.getElementById('todoId');
+            const todoId = inputTodoId.value;
+
+            if (!todoId) {
+                alert('Please enter a Todo ID.');
+                return;
+            }
+
+            const url = `https://api.freeapi.app/api/v1/todos/${todoId}`;
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.send();
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    alert(`Title: ${response.data.title}\nDescription: ${response.data.description}`);
+                } else if (xhr.readyState === 4) {
+                    alert('Todo not found!');
+                }
+            };
+
+            // Clear input field after getting todo
+            inputTodoId.value = '';
+        }
+
+        // Function to delete a todo by ID
+        function deleteTodoById() {
+            const inputDeleteTodoId = document.getElementById('deleteTodoId');
+            const todoId = inputDeleteTodoId.value;
+
+            if (!todoId) {
+                alert('Please enter a Todo ID to delete.');
+                return;
+            }
+
+            const url = `https://api.freeapi.app/api/v1/todos/${todoId}`;
+            const xhr = new XMLHttpRequest();
+            xhr.open('DELETE', url, true);
+            xhr.send();
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    alert('Todo deleted successfully!');
+                    getAllData(); // Refresh the todo list
+                } else if (xhr.readyState === 4) {
+                    alert('Failed to delete Todo.');
+                }
+            };
+
+            // Clear input field after deletion
+            inputDeleteTodoId.value = '';
+        }
+
+        // Function to update (patch) a todo by ID
+        function patchTodoById() {
+            const inputPatchTodoId = document.getElementById('patchTodoId');
+            const inputPatchTitle = document.getElementById('patchTitle');
+            const inputPatchDescription = document.getElementById('patchDescription');
+            const newTitle = inputPatchTitle.value;
+            const newDescription = inputPatchDescription.value;
+            const todoId = inputPatchTodoId.value;
+
+            if (!todoId) {
+                alert('Please enter a Todo ID to update.');
+                return;
+            }
+
+            const url = `https://api.freeapi.app/api/v1/todos/${todoId}`;
+            const xhr = new XMLHttpRequest();
+            xhr.open('PATCH', url, true);
+
+            const data = {};
+            if (newTitle) data.title = newTitle;
+            if (newDescription) data.description = newDescription;
+
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.send(JSON.stringify(data));
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    alert('Todo updated successfully!');
+                    getAllData(); // Refresh the todo list
+                } else if (xhr.readyState === 4) {
+                    alert('Failed to update Todo.');
+                }
+            };
+
+            // Clear input fields after update
+            inputPatchTodoId.value = '';
+            inputPatchTitle.value = '';
+            inputPatchDescription.value = '';
+        }
+    </script>
+</body>
+</html>
